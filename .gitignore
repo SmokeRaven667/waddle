@@ -1,0 +1,11 @@
+/bin/
+/lib/
+/linclude/
+/lib64
+/pyvenv.cfg
+/.idea/
+/build/
+/dist/
+/share/
+/*.egg-info
+/.coverage
