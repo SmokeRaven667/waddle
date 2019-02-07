@@ -1,6 +1,6 @@
 import pickle
 from unittest import TestCase
-from stork.bunch import BunchList
+from waddle.bunch import BunchList
 
 
 __all__ = [

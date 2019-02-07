@@ -2,7 +2,7 @@ import os
 import pickle
 from unittest import TestCase
 import pytest
-from stork.bunch import Bunch
+from waddle.bunch import Bunch
 
 
 __all__ = [

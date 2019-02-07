@@ -1,5 +1,5 @@
-# parameter_stork
-simple api and tooling around aws's parameter store
+# waddle
+the penguins api and tooling around aws's parameter store
 
 ## Bunch
 
@@ -10,7 +10,7 @@ to access values in a dictionary.
 e.g.,
 
 ```python
-from stork import Bunch
+from waddle import Bunch
 values = {
     'a': {
         'b': {
@@ -39,7 +39,7 @@ e.g.,
 
 ```python
 import os
-from stork import Bunch
+from waddle import Bunch
 os.environ['FTP_PASSWORD'] = 'password'
 config = {
     'ftp': {

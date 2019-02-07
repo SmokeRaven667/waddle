@@ -1,14 +1,33 @@
-
+SHELL := /bin/bash
 check: lint test coverage
 
 lint:
-	flake8 stork
-	flake8 tests
-	pylint --rcfile stork.pylintrc stork
-	pylint --rcfile tests.pylintrc tests
+	source bin/activate && flake8 waddle
+	source bin/activate && flake8 tests
+	source bin/activate && pylint --rcfile waddle.pylintrc waddle
+	source bin/activate && pylint --rcfile tests.pylintrc tests
 
 test:
-	python -B -O -m pytest tests
+	source bin/activate \
+	  && python -B -O -m pytest tests
 
 coverage:
-	python -B -O -m pytest --cov stork --cov-report term-missing tests/
+	source bin/activate \
+	  && python -B -O -m pytest --cov waddle --cov-report term-missing tests/
+
+setup:
+	which python3.7 && if [ ! -d bin ] ; then python3.7 -m venv . ; fi
+	which python3.6 && if [ ! -d bin ] ; then python3.6 -m venv . ; fi
+	source bin/activate \
+	  && python -m pip install -U pip \
+	  && pip install -r requirements.txt
+
+build:
+	source bin/activate \
+	  && python -B -O setup.py sdist \
+	  && python -B -O setup.py bdist_wheel
+
+clean:
+	source bin/activate \
+	  && python -B -O setup.py clean
+	rm -rf build dist

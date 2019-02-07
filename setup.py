@@ -11,7 +11,7 @@ except ImportError:
 
 version = '0.1'
 
-setup(name='parameter_stork',
+setup(name='waddle',
       version=version,
       description="A pathy wrapper around aws parameter store",
       long_description="""A pathy wrapper around aws parameter store""",
@@ -28,7 +28,7 @@ setup(name='parameter_stork',
       keywords='aws python parameter-store kms',
       author='Preetam Shingavi',
       author_email='p.shingavi@yahoo.com',
-      url='https://github.com/angry-penguins/parameter_stork',
+      url='https://github.com/angry-penguins/waddle',
       license='BSD',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
