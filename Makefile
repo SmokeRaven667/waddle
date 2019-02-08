@@ -9,7 +9,9 @@ lint:
 
 test:
 	source bin/activate \
-	  && python -B -O -m pytest --cov waddle --cov-report term-missing tests/
+	  && python -B -O -m pytest \
+		   --durations 10 \
+		   --cov waddle --cov-report term-missing tests/
 
 setup:
 	which python3.7 && if [ ! -d bin ] ; then python3.7 -m venv . ; fi

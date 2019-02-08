@@ -43,10 +43,10 @@ class Aws(TestCase):
             Name='/test/waddle/dog', Value='olive', Type='SecureString',
             Overwrite=True)
 
-    def test_session(self):
-        session = create_session()
-        self.assertEqual(session.profile_name, 'company')
-        self.assertEqual(session.region_name, 'us-east-2')
+    # def test_session(self):
+    #     session = create_session()
+    #     self.assertEqual(session.profile_name, 'company')
+    #     self.assertEqual(session.region_name, 'us-east-2')
 
     def test_yield_parameters(self):
         conf = Bunch()

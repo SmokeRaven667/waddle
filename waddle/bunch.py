@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 AnyDict = Dict[str, Any]
 
 
-def _wrap(val, obj_wrapper=None):
+def wrap(val, obj_wrapper=None):
     if isinstance(val, Mapping):
         return Bunch(val) if obj_wrapper is None else obj_wrapper(val)
     if isinstance(val, list):
@@ -45,13 +45,13 @@ class BunchList:
         value = self.values[key]
         if isinstance(key, slice):
             return BunchList(value, obj_wrapper=self._obj_wrapper)
-        return _wrap(value, self._obj_wrapper)
+        return wrap(value, self._obj_wrapper)
 
     def __setitem__(self, k, value):
         self.values[k] = value
 
     def __iter__(self):
-        return map(lambda i: _wrap(i, self._obj_wrapper), self.values)
+        return map(lambda i: wrap(i, self._obj_wrapper), self.values)
 
     def __len__(self):
         return len(self.values)
@@ -126,10 +126,10 @@ class Bunch:
         if self._is_reserved(key):
             return self._get(key)
         try:
-            return _wrap(self.values[key])
+            return wrap(self.values[key])
         except KeyError:
             self.values[key] = {}
-            return _wrap(self.values[key])
+            return wrap(self.values[key])
 
     def __delattr__(self, key):
         try:
@@ -143,7 +143,7 @@ class Bunch:
         pieces = key.split('.')
         parent = self.walk_to_parent(pieces)
         if parent:
-            return _wrap(parent.get(pieces[-1]))
+            return wrap(parent.get(pieces[-1]))
         return None
 
     def __setitem__(self, key, value):
@@ -190,8 +190,8 @@ class Bunch:
         pieces = key.split('.')
         parent = self.walk_to_parent(pieces)
         if parent:
-            return _wrap(parent.get(pieces[-1], default))
-        return _wrap(default)
+            return wrap(parent.get(pieces[-1], default))
+        return wrap(default)
 
     def setdefault(self, key, value):
         pieces = key.split('.')
@@ -210,7 +210,7 @@ class Bunch:
                 if not isinstance(parent, dict):
                     return None
                 value = parent.get(pieces[-1], default)
-            return _wrap(value)
+            return wrap(value)
         return fn
 
     def keys(self):
@@ -229,3 +229,6 @@ class Bunch:
                     prefix=prefix + [ key ])
             else:
                 yield '.'.join(prefix + [ key ]), value
+
+    def to_dict(self):
+        return self.values

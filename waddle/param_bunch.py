@@ -1,4 +1,5 @@
 from .bunch import Bunch
+from .bunch import wrap
 
 
 __all__ = [
@@ -14,7 +15,7 @@ class ParamBunch(Bunch):
             del values['meta']
         else:
             meta = {}
-        super(ParamBunch, self)._set('meta', meta)
+        super(ParamBunch, self)._set('meta', wrap(meta))
 
     @property
     def namespace(self):
@@ -24,8 +25,17 @@ class ParamBunch(Bunch):
     def kms_key(self):
         return self.meta.get('kms_key', False)
 
-    def items(self, values=None, prefix=None):
+    def aws_items(self, values=None, prefix=None):
         prefix = prefix or [ '', self.namespace ]
-        for key, value in super(ParamBunch, self).items(values, prefix):
+        for key, value in self.items(values, prefix):
             key = key.replace('.', '/')
             yield key, value
+
+    def file_items(self, values=None, prefix=None):
+        yield from self.items(values, prefix)
+        yield from self.meta.items(prefix=['meta'])
+
+    def to_dict(self):
+        result = super(ParamBunch, self).to_dict()
+        result['meta'] = self.meta.values
+        return result

@@ -29,6 +29,16 @@ class BunchTest(TestCase):
         self.assertIsNone(b['cody'])
         self.assertIsNone(b['cats.cody'])
 
+    def test_to_dict(self):
+        a = {
+            'b': {
+                'c': True,
+                'd': False,
+            }
+        }
+        b = Bunch(a)
+        self.assertEqual(b.to_dict(), a)
+
     def test_set_item(self):
         b = Bunch()
         b['a.b.c'] = True
