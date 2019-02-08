@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-check: lint test coverage
+check: lint test
 
 lint:
 	source bin/activate && flake8 waddle
@@ -8,10 +8,6 @@ lint:
 	source bin/activate && pylint --rcfile tests.pylintrc tests
 
 test:
-	source bin/activate \
-	  && python -B -O -m pytest tests
-
-coverage:
 	source bin/activate \
 	  && python -B -O -m pytest --cov waddle --cov-report term-missing tests/
 

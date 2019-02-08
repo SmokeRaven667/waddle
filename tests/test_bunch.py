@@ -182,3 +182,23 @@ class BunchTest(TestCase):
         })
         values = a.__getattr__('values')
         self.assertEqual(values, { 'hello': 'jinx' })
+
+    def test_keys(self):
+        a = Bunch()
+        a.b.c = True
+        a.b.d = False
+        for key in a.keys():
+            self.assertEqual(key, 'b')
+        for key in a:
+            self.assertEqual(key, 'b')
+
+    def test_items(self):
+        a = Bunch()
+        a.b.c = True
+        a.b.d = False
+        values = {
+            'b.d': False,
+            'b.c': True,
+        }
+        for key, value in a.items():
+            self.assertEqual(values[key], value)

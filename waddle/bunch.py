@@ -158,7 +158,7 @@ class Bunch:
             del parent[pieces[-1]]
 
     def _is_reserved(self, key):
-        if key == 'values':
+        if key in [ 'values' ]:
             return True
         return key in self.__dict__ and not key.startswith('__')
 
@@ -213,12 +213,19 @@ class Bunch:
             return _wrap(value)
         return fn
 
-    # def items(self):
-    #     return self.values.items()
-    #
-    # def keys(self):
-    #     return self.values.keys()
-    #
-    # def __iter__(self):
-    #     return iter(self.values)
-    #
+    def keys(self):
+        return self.values.keys()
+
+    def __iter__(self):
+        return iter(self.values)
+
+    def items(self, values=None, prefix=None):
+        values = values or self.values
+        prefix = prefix or []
+        for key, value in values.items():
+            if isinstance(value, Mapping):
+                yield from self.items(
+                    values=value,
+                    prefix=prefix + [ key ])
+            else:
+                yield '.'.join(prefix + [ key ]), value
