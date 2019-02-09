@@ -21,9 +21,4 @@ def yield_parameters(prefix) -> Generator[Tuple[str, str], None, None]:
             key = x['Name']
             value = x['Value']
             key = key.replace(prefix, '').replace('/', '.')[1:]
-            print(f'yielding {key}, {value}')
             yield key, value
-
-
-# def push_parameters(prefix):
-#     pass

@@ -12,12 +12,12 @@ def create_session():
     A handy helper function that will create the
     boto session using our waddle-level settings
     """
-    import waddle
+    from waddle import settings
     session = Session(
-        aws_access_key_id=waddle.aws_access_key_id,
-        aws_secret_access_key=waddle.aws_secret_access_key,
-        region_name=waddle.aws_region,
-        profile_name=waddle.aws_profile,
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.aws_region,
+        profile_name=settings.aws_profile,
     )
     return session
 

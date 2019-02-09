@@ -1,4 +1,5 @@
 from unittest import TestCase
+import pytest
 from waddle import ParamBunch
 
 
@@ -103,3 +104,23 @@ class ParamBunchTest(TestCase):
         }
         b = ParamBunch(data)
         self.assertEqual(b.to_dict(), data)
+
+    def test_error_config(self):
+        b = ParamBunch()
+        with pytest.raises(KeyError) as exc_info:
+            b.from_file('tests/conf/error.yml')
+        self.assertIn('`values`', exc_info.value.args[0])
+
+    def test_nested_config(self):
+        b = ParamBunch()
+        b.load(filename='tests/conf/nested.yml')
+        self.assertIn('cody', b.waddle.cats)
+        self.assertIn('olive', b.waddle.dogs)
+
+    def test_flat_config(self):
+        b = ParamBunch()
+        b.load(filename='tests/conf/flat.yml')
+        self.assertIn('cody', b.waddle.cats)
+        self.assertIn('olive', b.waddle.dogs)
+        self.assertEqual(b.namespace, 'test')
+        self.assertEqual(b.kms_key, 'dev')

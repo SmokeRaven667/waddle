@@ -1,10 +1,9 @@
 import os
 from subprocess import Popen
 from unittest import TestCase
-import waddle
+from waddle import settings
 from waddle.aws import create_session
-from waddle.aws import yield_parameters
-from waddle import Bunch
+from waddle import ParamBunch
 
 
 __all__ = [
@@ -30,11 +29,11 @@ class Aws(TestCase):
         self.setup_parameters()
 
     def setup_parameters(self):
-        self.aws_profile = waddle.aws_profile
-        self.aws_region = waddle.aws_region
-        waddle.aws_profile = 'company'
-        waddle.aws_region = 'us-east-2'
-        waddle.aws_profile = 'company'
+        self.aws_profile = settings.aws_profile
+        self.aws_region = settings.aws_region
+        settings.aws_profile = 'company'
+        settings.aws_region = 'us-east-2'
+        settings.aws_profile = 'company'
         session = create_session()
         ssm = session.client('ssm')
         ssm.put_parameter(
@@ -49,9 +48,13 @@ class Aws(TestCase):
     #     self.assertEqual(session.region_name, 'us-east-2')
 
     def test_yield_parameters(self):
-        conf = Bunch()
-        for key, value in yield_parameters('/test'):
-            conf[key] = value
+        conf = ParamBunch()
+        conf.load(prefix='/test')
+        self.assertEqual(conf.waddle.cat, 'cody')
+        self.assertEqual(conf.waddle.dog, 'olive')
+        self.assertIn('waddle.cat', conf)
+
+        conf = ParamBunch(prefix='test')
         self.assertEqual(conf.waddle.cat, 'cody')
         self.assertEqual(conf.waddle.dog, 'olive')
         self.assertIn('waddle.cat', conf)
@@ -63,8 +66,8 @@ class Aws(TestCase):
             '/test/waddle/cat',
             '/test/waddle/dog',
         ])
-        waddle.aws_profile = self.aws_profile
-        waddle.aws_region = self.aws_region
+        settings.aws_profile = self.aws_profile
+        settings.aws_region = self.aws_region
 
     def tearDown(self):
         self.delete_parameters()
