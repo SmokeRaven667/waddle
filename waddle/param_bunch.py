@@ -55,45 +55,27 @@ def dump_yaml(x, filename):
 class ParamBunch(Bunch):
     def __init__(self, values=None, prefix=None):
         super(ParamBunch, self).__init__(values)
-        meta = self.values.get('meta')
-        if meta is not None:
-            del values['meta']
-        else:
-            meta = dict_class()
-        super(ParamBunch, self)._set('meta', wrap(meta))
         if prefix:
             self.meta.namespace = prefix
             self.from_aws(prefix)
 
-    @property
-    def namespace(self):
-        return self.meta.get('namespace')
-
-    @property
-    def kms_key(self):
-        return self.meta.get('kms_key', False)
-
-    @property
-    def encrypted(self):
-        return self.meta.get('encrypted', False)
-
-    @property
-    def encryption_key(self):
-        return self.meta.get('encryption_key', False)
-
     def aws_items(self, values=None, prefix=None):
-        prefix = prefix or [ '', self.namespace ]
+        prefix = prefix or [ '', self.meta.namespace ]
         for key, value in self.items(values, prefix):
+            if '.meta.' in key:
+                continue
             key = key.replace('.', '/')
             yield key, value
 
     def file_items(self, values=None, prefix=None):
-        yield from self.items(values, prefix)
-        yield from self.meta.items(prefix=['meta'])
+        for key, value in self.items(values, prefix):
+            if key.startswith('meta.') or '.meta.' in key:
+                continue
+            yield key, value
+        yield from self.items(values=self.meta.values, prefix=[ 'meta' ])
 
     def to_dict(self):
         result = super(ParamBunch, self).to_dict()
-        result['meta'] = self.meta.values
         return result
 
     @staticmethod
@@ -105,23 +87,12 @@ class ParamBunch(Bunch):
             else:
                 yield '.'.join(prefix + [ key ]), value
 
-    def _handle_meta(self, data):
-        meta = data.pop('meta', None)
-        if meta:
-            self.meta = wrap(meta)
-
-    def _handle_meta_value(self, key, value):
-        self.meta[key] = value
-
     def from_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as f:
             data = yaml.load(f)
-            self._handle_meta(data)
             for key, value in ParamBunch._traverse(data):
                 if key == 'values':
                     raise KeyError('`values` is not a valid key name')
-                elif key.startswith('meta.'):
-                    self._handle_meta_value(key[5:], value)
                 else:
                     self[key] = value
 
@@ -142,12 +113,10 @@ class ParamBunch(Bunch):
         x = dict_class()
         for key, value in self.items():
             x[key] = value
-        x['meta'] = self.meta.values
         dump_yaml(x, filename)
 
     def save_nested(self, filename):
         x = copy.deepcopy(self.values)
-        x['meta'] = self.meta.values
         dump_yaml(x, filename)
 
     def save(self, filename, flat=False, nested=False):

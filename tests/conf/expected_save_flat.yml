@@ -7,6 +7,5 @@ waddle.cats:
 waddle.dogs:
   - peanut
   - olive
-meta:
-  namespace: test
-  kms_key: dev
+meta.namespace: test
+meta.kms_key: dev

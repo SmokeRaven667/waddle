@@ -41,7 +41,7 @@ def add_key(kms_key, filename, region=None, profile=None):
     key = b64_str(key)
     x = ParamBunch()
     x.load(filename=filename)
-    if x.encryption_key:
+    if x.meta.encryption_key:
         print(f'{filename} already has an encryption key.  '
               f'Use rekey to change encryption keys')
         return

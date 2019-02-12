@@ -22,8 +22,7 @@ class ParamBunchTest(TestCase):
                 'namespace': 'test.waddle',
             }
         })
-        self.assertEqual(b.namespace, 'test.waddle')
-        self.assertEqual(b.kms_key, False)
+        self.assertEqual(b.meta.namespace, 'test.waddle')
 
         b = ParamBunch({
             'a': {
@@ -37,19 +36,9 @@ class ParamBunchTest(TestCase):
                 'kms_key': 'dev',
             }
         })
-        self.assertEqual(b.namespace, 'test.waddle2')
-        self.assertEqual(b.kms_key, 'dev')
+        self.assertEqual(b.meta.namespace, 'test.waddle2')
+        self.assertEqual(b.meta.kms_key, 'dev')
 
-        b = ParamBunch({
-            'a': {
-                'b': {
-                    'cat': 'cody',
-                    'dog': 'peanut',
-                },
-            },
-        })
-        self.assertEqual(b.namespace, None)
-        self.assertEqual(b.kms_key, False)
 
     def test_items(self):
         b = ParamBunch({
@@ -123,8 +112,8 @@ class ParamBunchTest(TestCase):
         b.load(filename='tests/conf/flat.yml')
         self.assertIn('cody', b.waddle.cats)
         self.assertIn('olive', b.waddle.dogs)
-        self.assertEqual(b.namespace, 'test')
-        self.assertEqual(b.kms_key, 'dev')
+        self.assertEqual(b.meta.namespace, 'test')
+        self.assertEqual(b.meta.kms_key, 'dev')
 
     def test_save_flat(self):
         b = ParamBunch()

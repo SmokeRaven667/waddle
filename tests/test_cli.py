@@ -24,8 +24,8 @@ class TestCli(TestCase):
             ])
         b = ParamBunch()
         b.load(filename=filename)
-        self.assertIsNotNone(b.encryption_key)
-        self.assertEqual(b.kms_key, 'dev')
+        self.assertGreater(len(b.meta.encryption_key), 0)
+        self.assertEqual(b.meta.kms_key, 'dev')
         result = runner.invoke(
             cli.main, [
                 'add-key',
