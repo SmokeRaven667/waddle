@@ -38,19 +38,14 @@ class Aws(TestCase):
 
     @staticmethod
     def setup_parameters():
-        pass
-        # session = create_session()
-        # ssm = session.client('ssm')
-        # ssm.put_parameter(
-        #     Name='/test/waddle/cat', Value='cody', Type='String')
-        # ssm.put_parameter(
-        #     Name='/test/waddle/dog', Value='olive', Type='SecureString',
-        #     Overwrite=True)
-
-    # def test_session(self):
-    #     session = create_session()
-    #     self.assertEqual(session.profile_name, 'company')
-    #     self.assertEqual(session.region_name, 'us-east-2')
+        session = create_session()
+        ssm = session.client('ssm')
+        ssm.put_parameter(
+            Name='/test/waddle/cat', Value='cody', Type='String',
+            Overwrite=True)
+        ssm.put_parameter(
+            Name='/test/waddle/dog', Value='olive', Type='SecureString',
+            Overwrite=True)
 
     def test_yield_parameters(self):
         conf = ParamBunch()
@@ -66,13 +61,12 @@ class Aws(TestCase):
 
     @staticmethod
     def delete_parameters():
-        pass
-        # session = create_session()
-        # ssm = session.client('ssm')
-        # ssm.delete_parameters(Names=[
-        #     '/test/waddle/cat',
-        #     '/test/waddle/dog',
-        # ])
+        session = create_session()
+        ssm = session.client('ssm')
+        ssm.delete_parameters(Names=[
+            '/test/waddle/cat',
+            '/test/waddle/dog',
+        ])
 
     def tearDown(self):
         Aws.delete_parameters()
