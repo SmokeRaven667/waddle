@@ -4,7 +4,6 @@ import copy
 import yaml
 from yaml import Dumper
 from .bunch import Bunch
-from .bunch import wrap
 from .aws import yield_parameters
 
 

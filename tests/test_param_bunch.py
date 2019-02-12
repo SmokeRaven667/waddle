@@ -39,7 +39,6 @@ class ParamBunchTest(TestCase):
         self.assertEqual(b.meta.namespace, 'test.waddle2')
         self.assertEqual(b.meta.kms_key, 'dev')
 
-
     def test_items(self):
         b = ParamBunch({
             'a': {
