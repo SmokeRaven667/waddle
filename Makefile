@@ -14,11 +14,11 @@ test:
 		   --cov waddle --cov-report term-missing tests/
 
 setup:
-	which python3.7 && if [ ! -d bin ] ; then python3.7 -m venv . ; fi
-	which python3.6 && if [ ! -d bin ] ; then python3.6 -m venv . ; fi
+	if which python3.7 && [ ! -d bin ] ; then python3.7 -m venv . ; fi
+	if which python3.6 && [ ! -d bin ] ; then python3.6 -m venv . ; fi
 	source bin/activate \
-	  && python -m pip install -U pip \
-	  && pip install -r requirements.txt
+	  && python -m pip install -q -U pip \
+	  && pip install -q -r requirements.txt
 
 build:
 	source bin/activate \
@@ -29,3 +29,9 @@ clean:
 	source bin/activate \
 	  && python -B -O setup.py clean
 	rm -rf build dist
+
+upload:
+	source bin/activate \
+	  && twine upload dist/*
+
+deploy: clean build upload

@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 import pytest
 from waddle import ParamBunch
@@ -124,3 +125,49 @@ class ParamBunchTest(TestCase):
         self.assertIn('olive', b.waddle.dogs)
         self.assertEqual(b.namespace, 'test')
         self.assertEqual(b.kms_key, 'dev')
+
+    def test_save_flat(self):
+        b = ParamBunch()
+        b.waddle.cats = [
+            'cody',
+            'taylor',
+            'jinx',
+            'padme',
+        ]
+        b.waddle.dogs = [
+            'peanut',
+            'olive',
+        ]
+        b.meta.namespace = 'test'
+        b.meta.kms_key = 'dev'
+        filename = 'tests/conf/save_flat.yml'
+        b.save(filename, flat=True, nested=True)
+        with open(filename, 'r') as f:
+            actual = f.read()
+        with open('tests/conf/expected_save_flat.yml') as f:
+            expected = f.read()
+        self.assertEqual(actual, expected)
+        os.remove(filename)
+
+    def test_save_nested(self):
+        b = ParamBunch()
+        b.waddle.cats = [
+            'cody',
+            'taylor',
+            'jinx',
+            'padme',
+        ]
+        b.waddle.dogs = [
+            'peanut',
+            'olive',
+        ]
+        b.meta.namespace = 'test'
+        b.meta.kms_key = 'dev'
+        filename = 'tests/conf/save_nested.yml'
+        b.save(filename, nested=True)
+        with open(filename, 'r') as f:
+            actual = f.read()
+        with open('tests/conf/nested.yml') as f:
+            expected = f.read()
+        self.assertEqual(actual, expected)
+        os.remove(filename)

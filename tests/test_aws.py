@@ -1,5 +1,4 @@
 import os
-from subprocess import Popen
 from unittest import TestCase
 from waddle import settings
 from waddle.aws import create_session
@@ -12,28 +11,33 @@ __all__ = [
 
 
 class Aws(TestCase):
-    def setUp(self):
-        region = os.environ.get('AWS_REGION', 'us-east-2')
-        access_key_id = os.environ.get('AWS_ACCESS_KEY_ID', 'cody')
-        secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY', 'jinx')
-        handle = Popen([
-            '/bin/bash',
-            '-c',
-            f'source bin/activate '
-            f'  && aws --profile=company configure set region {region}'
-            f'  && aws --profile=company configure '
-            f'set aws_access_key_id {access_key_id}'
-            f'  && aws --profile=company configure set '
-            f'aws_secret_access_key {secret_access_key}' ])
-        handle.communicate()
-        self.setup_parameters()
+    settings_keys = [
+        'aws_region',
+        'aws_profile',
+        'aws_access_key_id',
+        'aws_secret_access_key',
+    ]
 
-    def setup_parameters(self):
-        self.aws_profile = settings.aws_profile
-        self.aws_region = settings.aws_region
-        settings.aws_profile = 'company'
-        settings.aws_region = 'us-east-2'
-        settings.aws_profile = 'company'
+    def save_settings(self):
+        self.settings = {}
+        for key in self.settings_keys:
+            value = getattr(settings, key, None)
+            self.settings[key] = value
+
+    def rehydrate_settings(self):
+        for key, value in self.settings.items():
+            setattr(settings, key, value)
+
+    def setUp(self):
+        self.save_settings()
+        keys = [ 'AWS_REGION', 'AWS_PROFILE', 'AWS_ACCESS_KEY_ID',
+                 'AWS_SECRET_ACCESS_KEY' ]
+        for key in keys:
+            setattr(settings, key.lower(), os.environ.get(key))
+        Aws.setup_parameters()
+
+    @staticmethod
+    def setup_parameters():
         session = create_session()
         ssm = session.client('ssm')
         ssm.put_parameter(
@@ -59,15 +63,15 @@ class Aws(TestCase):
         self.assertEqual(conf.waddle.dog, 'olive')
         self.assertIn('waddle.cat', conf)
 
-    def delete_parameters(self):
+    @staticmethod
+    def delete_parameters():
         session = create_session()
         ssm = session.client('ssm')
         ssm.delete_parameters(Names=[
             '/test/waddle/cat',
             '/test/waddle/dog',
         ])
-        settings.aws_profile = self.aws_profile
-        settings.aws_region = self.aws_region
 
     def tearDown(self):
-        self.delete_parameters()
+        Aws.delete_parameters()
+        self.rehydrate_settings()

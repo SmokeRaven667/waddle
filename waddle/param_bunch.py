@@ -1,5 +1,8 @@
 from collections.abc import Mapping
+from collections import OrderedDict
+import copy
 import yaml
+from yaml import Dumper
 from .bunch import Bunch
 from .bunch import wrap
 from .aws import yield_parameters
@@ -10,6 +13,45 @@ __all__ = [
 ]
 
 
+dict_class = OrderedDict
+
+
+def dict_representer(dumper, data):
+    return dumper.represent_dict(data.items())
+
+
+class YamlDumper(Dumper):
+    # pylint: disable=too-many-ancestors,too-many-arguments
+    def __init__(
+            self, stream,
+            default_style=None, default_flow_style=None,
+            canonical=None, indent=None, width=None,
+            allow_unicode=None, line_break=None,
+            encoding=None, explicit_start=None, explicit_end=None,
+            version=None, tags=None):
+        if default_flow_style is None:
+            default_flow_style = False
+        if line_break is None:
+            line_break = '\n'
+        if indent is None:
+            indent = 2
+        if explicit_start is None:
+            explicit_start = True
+        super(YamlDumper, self).__init__(
+            stream, default_style, default_flow_style, canonical, indent,
+            width, allow_unicode, line_break, encoding, explicit_start,
+            explicit_end, version, tags)
+        self.add_representer(dict_class, dict_representer)
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super(YamlDumper, self).increase_indent(flow, False)
+
+
+def dump_yaml(x, filename):
+    with open(filename, 'w') as f:
+        yaml.dump(x, f, Dumper=YamlDumper)
+
+
 class ParamBunch(Bunch):
     def __init__(self, values=None, prefix=None):
         super(ParamBunch, self).__init__(values)
@@ -17,7 +59,7 @@ class ParamBunch(Bunch):
         if meta is not None:
             del values['meta']
         else:
-            meta = {}
+            meta = dict_class()
         super(ParamBunch, self)._set('meta', wrap(meta))
         if prefix:
             self.meta.namespace = prefix
@@ -30,6 +72,14 @@ class ParamBunch(Bunch):
     @property
     def kms_key(self):
         return self.meta.get('kms_key', False)
+
+    @property
+    def encrypted(self):
+        return self.meta.get('encrypted', False)
+
+    @property
+    def encryption_key(self):
+        return self.meta.get('encryption_key', False)
 
     def aws_items(self, values=None, prefix=None):
         prefix = prefix or [ '', self.namespace ]
@@ -58,7 +108,7 @@ class ParamBunch(Bunch):
     def _handle_meta(self, data):
         meta = data.pop('meta', None)
         if meta:
-            self.meta = meta
+            self.meta = wrap(meta)
 
     def _handle_meta_value(self, key, value):
         self.meta[key] = value
@@ -87,3 +137,23 @@ class ParamBunch(Bunch):
         prefix = prefix.replace('.', '/')
         for key, value in yield_parameters(prefix):
             self[key] = value
+
+    def save_flat(self, filename):
+        x = dict_class()
+        for key, value in self.items():
+            x[key] = value
+        x['meta'] = self.meta.values
+        dump_yaml(x, filename)
+
+    def save_nested(self, filename):
+        x = copy.deepcopy(self.values)
+        x['meta'] = self.meta.values
+        dump_yaml(x, filename)
+
+    def save(self, filename, flat=False, nested=False):
+        if nested and flat:
+            nested = False
+        if nested:
+            self.save_nested(filename)
+        else:
+            self.save_flat(filename)

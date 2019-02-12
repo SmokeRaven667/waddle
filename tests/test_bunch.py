@@ -116,13 +116,14 @@ class BunchTest(TestCase):
         a['peter.dogs.olive'] = '@olivetoroam'
         self.assertEqual(
             repr(a),
-            "{'peter': {'dogs': {'olive': '@olivetoroam'}}}")
+            "([('peter', ([('dogs', ([('olive', '@olivetoroam')]))]))])")
         a = Bunch()
         key = 'some.really.long.key.that.is.longer.than.sixty.characters'
         a[key] = 'hello'
         self.assertEqual(
             repr(a),
-            "{'some': {'really': {'long': {'key': {'that': {'is': {'longe...}")
+            "([('some', ([('really', ([('long', ([('key', "
+            "([('that', ([('...])")
 
     def test_set_state(self):
         a = Bunch()

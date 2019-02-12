@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from collections import OrderedDict
 import logging
 import os
 import re
@@ -11,6 +12,7 @@ __all__ = [
 ]
 log = logging.getLogger(__name__)
 AnyDict = Dict[str, Any]
+dict_class = OrderedDict
 
 
 def wrap(val, obj_wrapper=None):
@@ -79,9 +81,9 @@ class Bunch:
 
     def __init__(self, values=None):
         if values is None:
-            self.values = {}
+            self.values: AnyDict = dict_class()
         else:
-            self.values = values
+            self.values: AnyDict = values
 
     def __contains__(self, key):
         pieces = key.split('.')
@@ -109,9 +111,9 @@ class Bunch:
         return not self == other
 
     def __repr__(self):
-        r = repr(self.values)
+        r = repr(self.values).replace('OrderedDict', '')
         if len(r) > 60:
-            r = r[:60] + '...}'
+            r = r[:60] + '...])'
         return r
 
     def __getstate__(self) -> Tuple[Any]:
@@ -128,7 +130,7 @@ class Bunch:
         try:
             return wrap(self.values[key])
         except KeyError:
-            self.values[key] = {}
+            self.values[key] = dict_class()
             return wrap(self.values[key])
 
     def __delattr__(self, key):
@@ -172,7 +174,7 @@ class Bunch:
         parent: AnyDict = self.values
         for y in pieces[:-1]:
             if y not in parent:
-                child = parent[y] = {}
+                child = parent[y] = dict_class()
             else:
                 child = parent[y]
             parent = child

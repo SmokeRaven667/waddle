@@ -1,0 +1,12 @@
+---
+waddle.cats:
+  - cody
+  - taylor
+  - jinx
+  - padme
+waddle.dogs:
+  - peanut
+  - olive
+meta:
+  namespace: test
+  kms_key: dev
