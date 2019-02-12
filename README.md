@@ -1,5 +1,6 @@
 # waddle
 the penguins api and tooling around aws's parameter store
+![codebuild](https://codebuild.us-east-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiUU82MEFwb2JTUzJ2OFJSOUI4eURSc01BNnBNb04zVTRvaUZxTERxb3U3Ui9HdkVJRUllOHBUdlNXVGpGVXpUeXllVkVncVE4cDIxcFBIMzh6SFFMUWFzPSIsIml2UGFyYW1ldGVyU3BlYyI6IkJlcmc3clNIbVVBaFRCWFUiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
 ## Bunch
 
