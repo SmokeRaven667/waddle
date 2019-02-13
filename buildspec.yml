@@ -3,6 +3,8 @@ version: 0.2
 phases:
   install:
     commands:
+      - "apt-get -qq update"
+      - "apt-get -qq install libyaml-dev"
       - "make setup"
   build:
     commands:

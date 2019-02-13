@@ -34,17 +34,17 @@ def add_key(kms_key, filename, region=None, profile=None):
     Example:
         waddle add-key -p profile -r us-east-2 dev ./conf/dev.yml
     """
-    client = cached_client('kms', region=region, profile=profile)
-    key_alias = prefix_alias(kms_key)
-    response = client.generate_data_key(KeyId=key_alias, KeySpec='AES_256')
-    key = response['CiphertextBlob']
-    key = b64_str(key)
     x = ParamBunch()
     x.load(filename=filename)
     if x.meta.encryption_key:
         print(f'{filename} already has an encryption key.  '
               f'Use rekey to change encryption keys')
         return
+    client = cached_client('kms', region=region, profile=profile)
+    key_alias = prefix_alias(kms_key)
+    response = client.generate_data_key(KeyId=key_alias, KeySpec='AES_256')
+    key = response['CiphertextBlob']
+    key = b64_str(key)
     x.meta.kms_key = kms_key
     x.meta.encryption_key = key
     x.save(filename=filename, flat=True)
