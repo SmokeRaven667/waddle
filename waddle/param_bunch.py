@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from collections import OrderedDict
 import copy
+import re
 import yaml
 from yaml import Dumper
 from .bunch import Bunch
@@ -67,8 +68,9 @@ class ParamBunch(Bunch):
             yield key, value
 
     def file_items(self, values=None, prefix=None):
+        meta_prefix = re.compile(r'^\.?meta\.')
         for key, value in self.items(values, prefix):
-            if key.startswith('meta.') or '.meta.' in key:
+            if meta_prefix.match(key):
                 continue
             yield key, value
         yield from self.items(values=self.meta.values, prefix=[ 'meta' ])
