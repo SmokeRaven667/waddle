@@ -88,7 +88,7 @@ class ParamBunch(Bunch):
         values = []
         for key, value in ParamBunch._traverse(data):
             if key in ['values', 'original_values' ]:
-                raise KeyError('`values` is not a valid key name')
+                raise KeyError(f'`{key}` is not a valid key name')
             elif key.startswith('meta.'):
                 self[key] = value
             else:
