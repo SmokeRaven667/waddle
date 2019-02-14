@@ -1,9 +1,9 @@
 from collections.abc import Mapping
-from collections import OrderedDict
 import logging
 import os
 import re
 from typing import Dict, Any, List, Optional, Tuple
+from ruamel.yaml.comments import CommentedMap
 
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
 ]
 log = logging.getLogger(__name__)
 AnyDict = Dict[str, Any]
-dict_class = OrderedDict
+dict_class = CommentedMap
 
 
 def wrap(val, obj_wrapper=None):
@@ -111,7 +111,7 @@ class Bunch:
         return not self == other
 
     def __repr__(self):
-        r = repr(self.values).replace('OrderedDict', '')
+        r = repr(self.values).replace('ordereddict', '')
         if len(r) > 60:
             r = r[:60] + '...])'
         return r

@@ -1,9 +1,7 @@
 from collections.abc import Mapping
-from collections import OrderedDict
-import copy
 import re
-import yaml
-from yaml import Dumper
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 from .bunch import Bunch
 from .aws import yield_parameters
 
@@ -13,48 +11,21 @@ __all__ = [
 ]
 
 
-dict_class = OrderedDict
-
-
-def dict_representer(dumper, data):
-    return dumper.represent_dict(data.items())
-
-
-class YamlDumper(Dumper):
-    # pylint: disable=too-many-ancestors,too-many-arguments
-    def __init__(
-            self, stream,
-            default_style=None, default_flow_style=None,
-            canonical=None, indent=None, width=None,
-            allow_unicode=None, line_break=None,
-            encoding=None, explicit_start=None, explicit_end=None,
-            version=None, tags=None):
-        if default_flow_style is None:
-            default_flow_style = False
-        if line_break is None:
-            line_break = '\n'
-        if indent is None:
-            indent = 2
-        if explicit_start is None:
-            explicit_start = True
-        super(YamlDumper, self).__init__(
-            stream, default_style, default_flow_style, canonical, indent,
-            width, allow_unicode, line_break, encoding, explicit_start,
-            explicit_end, version, tags)
-        self.add_representer(dict_class, dict_representer)
-
-    def increase_indent(self, flow=False, indentless=False):
-        return super(YamlDumper, self).increase_indent(flow, False)
+dict_class = CommentedMap
 
 
 def dump_yaml(x, filename):
+    yaml = YAML()
+    yaml.indent(sequence=4, offset=2)
+    yaml.explicit_start = True
     with open(filename, 'w') as f:
-        yaml.dump(x, f, Dumper=YamlDumper)
+        yaml.dump(x, f)
 
 
 class ParamBunch(Bunch):
     def __init__(self, values=None, prefix=None):
         super(ParamBunch, self).__init__(values)
+        super(ParamBunch, self)._set('original_values', values)
         if prefix:
             self.meta.namespace = prefix
             self.from_aws(prefix)
@@ -90,7 +61,9 @@ class ParamBunch(Bunch):
 
     def from_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as f:
+            yaml = YAML()
             data = yaml.load(f)
+            super(ParamBunch, self)._set('original_values', data)
             for key, value in ParamBunch._traverse(data):
                 if key == 'values':
                     raise KeyError('`values` is not a valid key name')
@@ -110,20 +83,51 @@ class ParamBunch(Bunch):
         for key, value in yield_parameters(prefix):
             self[key] = value
 
-    def save_flat(self, filename):
-        x = dict_class()
+    def original_value(self, key):
+        data = self.original_values
+        if key in data:
+            return data, key, data[key]
+        pieces = key.split('.')
+        for x in pieces[:-1]:
+            data = data[x]
+        key = pieces[-1]
+        return data, key, data[key]
+
+    def original_parent(self, key):
+        data = self.original_values
+        pieces = key.split('.')
+        try:
+            for x in pieces[:-1]:
+                data = data[x]
+            return data, pieces[-1]
+        except (KeyError, TypeError):
+            return self.original_values, key
+
+    def fill_back(self):
+        updated_values = []
+        new_values = []
         for key, value in self.items():
-            x[key] = value
-        dump_yaml(x, filename)
+            try:
+                parent, key, original_value = self.original_value(key)
+                if value != original_value:
+                    updated_values.append((parent, key, value))
+            except (KeyError, TypeError):
+                new_values.append((key, value))
+        self.handle_updates(updated_values)
+        self.handle_new(new_values)
 
-    def save_nested(self, filename):
-        x = copy.deepcopy(self.values)
-        dump_yaml(x, filename)
+    def handle_updates(self, updated_values):
+        # pylint: disable=access-member-before-definition
+        for parent, key, value in updated_values:
+            parent[key] = value
+        if self.original_values is None:
+            self.original_values = dict_class()
 
-    def save(self, filename, flat=False, nested=False):
-        if nested and flat:
-            nested = False
-        if nested:
-            self.save_nested(filename)
-        else:
-            self.save_flat(filename)
+    def handle_new(self, new_values):
+        for key, value in new_values:
+            parent, x = self.original_parent(key)
+            parent[x] = value
+
+    def save(self, filename):
+        self.fill_back()
+        dump_yaml(self.original_values, filename)

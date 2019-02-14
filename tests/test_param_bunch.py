@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import TestCase
 import pytest
 from waddle import ParamBunch
@@ -129,7 +130,7 @@ class ParamBunchTest(TestCase):
         b.meta.namespace = 'test'
         b.meta.kms_key = 'dev'
         filename = 'tests/conf/save_flat.yml'
-        b.save(filename, flat=True, nested=True)
+        b.save(filename)
         with open(filename, 'r') as f:
             actual = f.read()
         with open('tests/conf/expected_save_flat.yml') as f:
@@ -137,25 +138,13 @@ class ParamBunchTest(TestCase):
         self.assertEqual(actual, expected)
         os.remove(filename)
 
-    def test_save_nested(self):
+    def test_updates(self):
+        filename = 'tests/conf/update.yml'
+        shutil.copyfile('tests/conf/add_key.input.yml', filename)
         b = ParamBunch()
-        b.waddle.cats = [
-            'cody',
-            'taylor',
-            'jinx',
-            'padme',
-        ]
-        b.waddle.dogs = [
-            'peanut',
-            'olive',
-        ]
-        b.meta.namespace = 'test'
-        b.meta.kms_key = 'dev'
-        filename = 'tests/conf/save_nested.yml'
-        b.save(filename, nested=True)
-        with open(filename, 'r') as f:
-            actual = f.read()
-        with open('tests/conf/nested.yml') as f:
-            expected = f.read()
-        self.assertEqual(actual, expected)
+        b.load(filename=filename)
+        b.waddle.preferred = 'dogs'
+        b.save(filename)
+        b.load(filename=filename)
+        self.assertEqual('dogs', b.waddle.preferred)
         os.remove(filename)

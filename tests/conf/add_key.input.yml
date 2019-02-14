@@ -1,0 +1,14 @@
+---
+# these are the development cats
+waddle.cats:
+  - cody
+  - taylor
+  - jinx
+  - padme
+# these are the development dogs
+waddle.dogs:
+  - peanut
+  - olive
+waddle.preferred: cats
+meta:
+  namespace: test

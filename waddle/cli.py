@@ -21,7 +21,7 @@ def main():
 
 
 @main.command(name='add-key')
-@click.argument('kms_key', metavar='key_alias')
+@click.argument('kms_key', metavar='key_alias', )
 @click.argument('filename', metavar='/path/to/config_file.yml',
                 type=click.Path(exists=True))
 @click.option('-r', '--region', metavar='region')
@@ -47,7 +47,7 @@ def add_key(kms_key, filename, region=None, profile=None):
     key = b64_str(key)
     x.meta.kms_key = kms_key
     x.meta.encryption_key = key
-    x.save(filename=filename, flat=True)
+    x.save(filename=filename)
 
 
 if __name__ == "__main__":
