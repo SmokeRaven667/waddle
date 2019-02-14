@@ -33,6 +33,7 @@ class TestCli(TestCase):
                 filename,
             ])
         self.assertIn('already has an encryption key', result.output)
+        self.add_secret(filename)
         os.remove(filename)
 
     def test_comment_preservation(self):
@@ -55,3 +56,18 @@ class TestCli(TestCase):
         self.assertIn('# these are the development dogs', data)
         self.assertIn('# these are the development cats', data)
         os.remove(filename)
+
+    def add_secret(self, filename):
+        secret = 'this is super secret'
+        runner = CliRunner()
+        runner.invoke(
+            cli.main, [
+                'add-secret',
+                '-f',
+                filename,
+                'waddle.secret',
+            ], input=f'{secret}\n')
+
+        b = ParamBunch()
+        b.load(filename=filename)
+        self.assertEqual(b.waddle.secret, secret)

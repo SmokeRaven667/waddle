@@ -2,6 +2,9 @@ from collections.abc import Mapping
 import re
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
+from murmuration import kms
+from murmuration import gcm
+from murmuration.helpers import from_b64_str
 from .bunch import Bunch
 from .aws import yield_parameters
 
@@ -59,22 +62,48 @@ class ParamBunch(Bunch):
             else:
                 yield '.'.join(prefix + [ key ]), value
 
-    def from_file(self, filename):
+    @staticmethod
+    def pull_encryption_key(data, decrypt):
+        if not decrypt:
+            return None
+        encryption_key = data.get('meta', {}).get('encryption_key')
+        encryption_key = encryption_key or data.get('meta.encryption_key')
+        region = data.get('meta', {}).get('region')
+        region = region or data.get('meta.region')
+        profile = data.get('meta', {}).get('profile')
+        profile = profile or data.get('meta.region')
+        if encryption_key:
+            encryption_key = from_b64_str(encryption_key)
+            encryption_key = kms.decrypt_bytes(encryption_key, region, profile)
+        return encryption_key
+
+    @staticmethod
+    def try_decrypt(value, encryption_key, decrypt):
+        if encryption_key and decrypt and isinstance(value, str):
+            try:
+                value = gcm.decrypt(value, encryption_key)
+            except ValueError:
+                pass
+        return value
+
+    def from_file(self, filename, decrypt=True):
         with open(filename, 'r', encoding='utf-8') as f:
             yaml = YAML()
             data = yaml.load(f)
+            encryption_key = ParamBunch.pull_encryption_key(data, decrypt)
             super(ParamBunch, self)._set('original_values', data)
             for key, value in ParamBunch._traverse(data):
-                if key == 'values':
+                if key in ['values', 'original_values' ]:
                     raise KeyError('`values` is not a valid key name')
                 else:
-                    self[key] = value
+                    self[key] = ParamBunch.try_decrypt(
+                        value, encryption_key, decrypt)
 
-    def load(self, prefix=None, filename=None):
+    def load(self, prefix=None, filename=None, decrypt=True):
         if prefix:
             self.from_aws(prefix)
         if filename:
-            self.from_file(filename)
+            self.from_file(filename, decrypt)
 
     def from_aws(self, prefix):
         if not prefix.startswith('/'):
