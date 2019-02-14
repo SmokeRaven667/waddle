@@ -53,11 +53,26 @@ class Aws(TestCase):
         self.assertEqual(conf.waddle.cat, 'cody')
         self.assertEqual(conf.waddle.dog, 'olive')
         self.assertIn('waddle.cat', conf)
+        self.assertIn('waddle.dog', conf.encrypted)
+        conf.waddle.dog = 'peanut'
+        conf.waddle.secret = 'test of secrets'
+        conf.encrypted.append('waddle.secret')
+        conf.to_aws()
 
-        conf = ParamBunch(prefix='test')
+        conf.load(prefix='/test')
+        self.assertIn('waddle.dog', conf.encrypted)
+        self.assertIn('waddle.secret', conf.encrypted)
+        self.assertEqual(conf.waddle.dog, 'peanut')
+        self.assertEqual(conf.waddle.secret, 'test of secrets')
         self.assertEqual(conf.waddle.cat, 'cody')
-        self.assertEqual(conf.waddle.dog, 'olive')
-        self.assertIn('waddle.cat', conf)
+
+        conf.waddle.cat = [ 'cody', 'jinx' ]
+        conf.meta.kms_key = 'dev'
+        conf.to_aws()
+        conf = ParamBunch(prefix='test')
+        self.assertEqual(conf.waddle.dog, 'peanut')
+        self.assertEqual(conf.waddle.secret, 'test of secrets')
+        self.assertIn('jinx', conf.waddle.cat)
 
     @staticmethod
     def delete_parameters():
@@ -66,6 +81,7 @@ class Aws(TestCase):
         ssm.delete_parameters(Names=[
             '/test/waddle/cat',
             '/test/waddle/dog',
+            '/test/waddle/secret',
         ])
 
     def tearDown(self):

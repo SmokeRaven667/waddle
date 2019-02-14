@@ -48,6 +48,7 @@ class TestCli(TestCase):
         self.assertIn('cody', b.waddle.cats)
         self.assertEqual(b.waddle.preferred, 'cats')
         self.assertEqual(b.waddle.secret, secret)
+        self.assertIn('waddle.secret', b.encrypted)
 
     def add_secret_failure(self):
         runner = CliRunner()

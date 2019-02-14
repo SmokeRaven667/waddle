@@ -5,6 +5,7 @@ from ruamel.yaml.comments import CommentedMap
 from murmuration import kms_wrapped
 from .bunch import Bunch
 from .aws import yield_parameters
+from .aws import put_parameter
 
 
 __all__ = [
@@ -27,8 +28,8 @@ class ParamBunch(Bunch):
     def __init__(self, values=None, prefix=None):
         super(ParamBunch, self).__init__(values)
         super(ParamBunch, self)._set('original_values', values)
+        super(ParamBunch, self)._set('encrypted', [])
         if prefix:
-            self.meta.namespace = prefix
             self.from_aws(prefix)
 
     def aws_items(self, values=None, prefix=None):
@@ -76,12 +77,15 @@ class ParamBunch(Bunch):
         super(ParamBunch, self)._set('original_values', data)
         values = []
         for key, value in ParamBunch._traverse(data):
-            if key in ['values', 'original_values' ]:
+            if key in ['values', 'original_values', 'encrypted', ]:
                 raise KeyError(f'`{key}` is not a valid key name')
             elif key.startswith('meta.'):
                 self[key] = value
             else:
                 values.append((key, value))
+        self.handle_file_values(values, decrypt)
+
+    def handle_file_values(self, values, decrypt):
         kms_key = self.get('meta.kms_key')
         region = self.get('meta.region')
         profile = self.get('meta.profile')
@@ -90,6 +94,8 @@ class ParamBunch(Bunch):
                 self[key] = value
                 continue
             self[key] = ParamBunch.try_decrypt(value, region, profile)
+            if self[key] != value:
+                self.encrypted.append(key)
 
     def load(self, prefix=None, filename=None, decrypt=True):
         if prefix:
@@ -101,8 +107,22 @@ class ParamBunch(Bunch):
         if not prefix.startswith('/'):
             prefix = f'/{prefix}'
         prefix = prefix.replace('.', '/')
-        for key, value in yield_parameters(prefix):
+        for key, value, type_ in yield_parameters(prefix):
             self[key] = value
+            if type_ == 'SecureString':
+                self.encrypted.append(key)
+        self.meta.namespace = prefix[1:].replace('/', '.')
+
+    def to_aws(self):
+        namespace = self.get('meta.namespace', '')
+        ms_encrypted = { f'.{namespace}.{x}' for x in self.encrypted }
+        kms_key = self.get('meta.kms_key')
+        for key, value in self.items(prefix=[ '', namespace ]):
+            if '.meta.' in key:
+                continue
+            encrypted = key in ms_encrypted
+            key = key.replace('.', '/')
+            put_parameter(key, value, kms_key, encrypted)
 
     def original_value(self, key):
         data = self.original_values
