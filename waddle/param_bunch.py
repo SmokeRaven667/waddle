@@ -62,17 +62,11 @@ class ParamBunch(Bunch):
             else:
                 yield '.'.join(prefix + [ key ]), value
 
-    @staticmethod
-    def pull_encryption_key(data, decrypt):
-        if not decrypt:
-            return None
-        encryption_key = data.get('meta', {}).get('encryption_key')
-        encryption_key = encryption_key or data.get('meta.encryption_key')
-        region = data.get('meta', {}).get('region')
-        region = region or data.get('meta.region')
-        profile = data.get('meta', {}).get('profile')
-        profile = profile or data.get('meta.region')
-        if encryption_key:
+    def encryption_key(self, decrypt=True):
+        encryption_key = self.get('meta.encryption_key')
+        if encryption_key and decrypt:
+            region = self.get('meta.region')
+            profile = self.get('meta.profile')
             encryption_key = from_b64_str(encryption_key)
             encryption_key = kms.decrypt_bytes(encryption_key, region, profile)
         return encryption_key
@@ -90,14 +84,18 @@ class ParamBunch(Bunch):
         with open(filename, 'r', encoding='utf-8') as f:
             yaml = YAML()
             data = yaml.load(f)
-            encryption_key = ParamBunch.pull_encryption_key(data, decrypt)
-            super(ParamBunch, self)._set('original_values', data)
-            for key, value in ParamBunch._traverse(data):
-                if key in ['values', 'original_values' ]:
-                    raise KeyError('`values` is not a valid key name')
-                else:
-                    self[key] = ParamBunch.try_decrypt(
-                        value, encryption_key, decrypt)
+        super(ParamBunch, self)._set('original_values', data)
+        values = []
+        for key, value in ParamBunch._traverse(data):
+            if key in ['values', 'original_values' ]:
+                raise KeyError('`values` is not a valid key name')
+            elif key.startswith('meta.'):
+                self[key] = value
+            else:
+                values.append((key, value))
+        encryption_key = self.encryption_key(decrypt)
+        for key, value in values:
+            self[key] = ParamBunch.try_decrypt(value, encryption_key, decrypt)
 
     def load(self, prefix=None, filename=None, decrypt=True):
         if prefix:
