@@ -44,7 +44,7 @@ setup(
         'pyyaml',
         'boto3>=1.9.0',
         'click>=7.0',
-        'murmuration>=0.2',
+        'murmuration>=0.4',
         'ruamel.yaml>=0.15.87',
     ],
     entry_points={

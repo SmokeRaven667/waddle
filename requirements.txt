@@ -10,5 +10,5 @@ pylint>=2.2.2
 pytest-cov>=2.6.1
 twine>=1.12.1
 click>=7.0
-murmuration>=0.2
+murmuration>=0.4
 ruamel.yaml>=0.15.87

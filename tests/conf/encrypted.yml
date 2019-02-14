@@ -7,4 +7,4 @@ waddle.cats:
 waddle.dogs:
   - peanut
   - olive
-waddle.favorite_dog:
+waddle.favorite_dog: peanut

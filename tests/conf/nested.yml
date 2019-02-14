@@ -8,6 +8,7 @@ waddle:
   dogs:
     - peanut
     - olive
+  preferred: cats
 meta:
   namespace: test
   kms_key: dev

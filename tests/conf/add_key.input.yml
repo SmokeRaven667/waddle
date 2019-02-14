@@ -12,3 +12,4 @@ waddle.dogs:
 waddle.preferred: cats
 meta:
   namespace: test
+  kms_key: dev

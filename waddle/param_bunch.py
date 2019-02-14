@@ -2,9 +2,7 @@ from collections.abc import Mapping
 import re
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
-from murmuration import kms
-from murmuration import gcm
-from murmuration.helpers import from_b64_str
+from murmuration import kms_wrapped
 from .bunch import Bunch
 from .aws import yield_parameters
 
@@ -62,20 +60,11 @@ class ParamBunch(Bunch):
             else:
                 yield '.'.join(prefix + [ key ]), value
 
-    def encryption_key(self, decrypt=True):
-        encryption_key = self.get('meta.encryption_key')
-        if encryption_key and decrypt:
-            region = self.get('meta.region')
-            profile = self.get('meta.profile')
-            encryption_key = from_b64_str(encryption_key)
-            encryption_key = kms.decrypt_bytes(encryption_key, region, profile)
-        return encryption_key
-
     @staticmethod
-    def try_decrypt(value, encryption_key, decrypt):
-        if encryption_key and decrypt and isinstance(value, str):
+    def try_decrypt(value, region, profile):
+        if isinstance(value, str):
             try:
-                value = gcm.decrypt(value, encryption_key)
+                value = kms_wrapped.decrypt(value, region, profile)
             except ValueError:
                 pass
         return value
@@ -93,9 +82,14 @@ class ParamBunch(Bunch):
                 self[key] = value
             else:
                 values.append((key, value))
-        encryption_key = self.encryption_key(decrypt)
+        kms_key = self.get('meta.kms_key')
+        region = self.get('meta.region')
+        profile = self.get('meta.profile')
         for key, value in values:
-            self[key] = ParamBunch.try_decrypt(value, encryption_key, decrypt)
+            if not decrypt or not kms_key:
+                self[key] = value
+                continue
+            self[key] = ParamBunch.try_decrypt(value, region, profile)
 
     def load(self, prefix=None, filename=None, decrypt=True):
         if prefix:

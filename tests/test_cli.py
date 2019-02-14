@@ -13,44 +13,19 @@ class TestCli(TestCase):
         self.assertIn('waddle', result.output)
 
     def test_add_key(self):
-        filename = 'tests/conf/cli.yml'
+        filename = 'tests/conf/secret.yml'
         copyfile('tests/conf/nested.yml', filename)
-        runner = CliRunner()
-        runner.invoke(
-            cli.main, [
-                'add-key',
-                'dev',
-                filename,
-            ])
-        b = ParamBunch()
-        b.load(filename=filename)
-        self.assertGreater(len(b.meta.encryption_key), 0)
-        self.assertEqual(b.meta.kms_key, 'dev')
-        result = runner.invoke(
-            cli.main, [
-                'add-key',
-                'dev',
-                filename,
-            ])
-        self.assertIn('already has an encryption key', result.output)
         self.add_secret(filename)
+        self.add_secret_failure()
         os.remove(filename)
 
     def test_comment_preservation(self):
         filename = 'tests/conf/add_key.yml'
         copyfile('tests/conf/add_key.input.yml', filename)
-        runner = CliRunner()
-        runner.invoke(
-            cli.main, [
-                'add-key',
-                'dev',
-                filename,
-            ])
-
         b = ParamBunch()
         b.load(filename=filename)
-        self.assertGreater(len(b.meta.encryption_key), 0)
-        self.assertEqual(b.meta.kms_key, 'dev')
+        b.waddle.preferred = 'cats'
+        b.save(filename=filename)
         with open(filename, 'r') as f:
             data = f.read()
         self.assertIn('# these are the development dogs', data)
@@ -70,4 +45,17 @@ class TestCli(TestCase):
 
         b = ParamBunch()
         b.load(filename=filename)
+        self.assertIn('cody', b.waddle.cats)
+        self.assertEqual(b.waddle.preferred, 'cats')
         self.assertEqual(b.waddle.secret, secret)
+
+    def add_secret_failure(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main, [
+                'add-secret',
+                '-f',
+                'tests/conf/encrypted.yml',
+                'waddle.secret',
+            ], input=f'whatwhat\n')
+        self.assertIn('does not have a kms key specified', result.output)
