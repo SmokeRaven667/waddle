@@ -25,12 +25,12 @@ def dump_yaml(x, filename):
 
 
 class ParamBunch(Bunch):
-    def __init__(self, values=None, prefix=None):
+    def __init__(self, values=None, prefix=None, filename=None):
         super(ParamBunch, self).__init__(values)
         super(ParamBunch, self)._set('original_values', values)
         super(ParamBunch, self)._set('encrypted', [])
-        if prefix:
-            self.from_aws(prefix)
+        if prefix or filename:
+            self.load(prefix=prefix, filename=filename)
 
     def aws_items(self, values=None, prefix=None):
         prefix = prefix or [ '', self.meta.namespace ]
@@ -86,11 +86,10 @@ class ParamBunch(Bunch):
         self.handle_file_values(values, decrypt)
 
     def handle_file_values(self, values, decrypt):
-        kms_key = self.get('meta.kms_key')
         region = self.get('meta.region')
         profile = self.get('meta.profile')
         for key, value in values:
-            if not decrypt or not kms_key:
+            if not decrypt:
                 self[key] = value
                 continue
             self[key] = ParamBunch.try_decrypt(value, region, profile)
@@ -113,15 +112,20 @@ class ParamBunch(Bunch):
                 self.encrypted.append(key)
         self.meta.namespace = prefix[1:].replace('/', '.')
 
-    def to_aws(self):
+    def _encrypted_keys(self):
         namespace = self.get('meta.namespace', '')
-        ms_encrypted = { f'.{namespace}.{x}' for x in self.encrypted }
+        prefix = f'/{namespace}' if namespace else ''
+        ms_encrypted = set()
+        for x in self.encrypted:
+            x = x.replace('.', '/')
+            ms_encrypted.add(f'{prefix}/{x}')
+        return ms_encrypted
+
+    def to_aws(self):
+        ms_encrypted = self._encrypted_keys()
         kms_key = self.get('meta.kms_key')
-        for key, value in self.items(prefix=[ '', namespace ]):
-            if '.meta.' in key:
-                continue
+        for key, value in self.aws_items():
             encrypted = key in ms_encrypted
-            key = key.replace('.', '/')
             put_parameter(key, value, kms_key, encrypted)
 
     def original_value(self, key):

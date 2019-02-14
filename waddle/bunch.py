@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from itertools import chain
 import logging
 import os
 import re
@@ -99,7 +100,7 @@ class Bunch:
 
     def __dir__(self):
         # introspection for auto-complete in IPython etc
-        return list(self.values)
+        return chain(self.values, super(Bunch, self).__dir__())
 
     def __eq__(self, other):
         if isinstance(other, Bunch):
