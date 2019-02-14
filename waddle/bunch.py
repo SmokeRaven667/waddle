@@ -26,7 +26,7 @@ def wrap(val, obj_wrapper=None):
 
 class BunchList:
     def __init__(self, values, obj_wrapper=None):
-        # make iterables into lists
+        "make iterables into lists"
         if not isinstance(values, list):
             values = list(values)
         self.values = values
@@ -74,10 +74,30 @@ class BunchList:
 
 
 class Bunch:
+    """
+    Bunch pattern that allows us to reference settings values
+    file in a pathy manner.  e.g.,
+
+        x = Bunch()
+        x.path.to.key = value
+        x.path.greeting = 'hello'
+        x['path.other_greeting'] = 'hello world'
+    """
     def _set(self, key, value):
+        """
+        This is a useful function if you want to set
+        an attribute on the underlying object so that
+        the value isn't stored in the `self.values` dictionary.
+        We need this because we override `__setattr__` below.
+        """
         super(Bunch, self).__setattr__(key, value)
 
     def _get(self, key):
+        """
+        This is a useful function if you want to get
+        an attribute on the underlying object.
+        We need this because we override `__getattr__` below.
+        """
         return self.__dict__.get(key)
 
     def __init__(self, values=None):
