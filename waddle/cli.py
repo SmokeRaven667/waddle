@@ -81,7 +81,7 @@ def encrypt(filename):
     for key, value in x.items():
         values.append([key, value])
     for key, value in values:
-        if is_secret(key):
+        if is_secret(key) and not key.startswith('meta.'):
             value = kms_wrapped.encrypt(
                 value, kms_key, region=region, profile=profile)
             x[key] = value
