@@ -1,3 +1,4 @@
+import re
 import sys
 import click
 import pkg_resources
@@ -17,6 +18,11 @@ def version():
 @click.version_option(version())
 def main():
     "cli for managing waddle config files"
+
+
+def is_secret(key):
+    matcher = re.compile('.*(key|secret|token|password).*')
+    return matcher.match(key)
 
 
 @main.command(name='add-secret')
@@ -46,6 +52,39 @@ def add_secret(filename, key):
     region = x.get('meta.region')
     profile = x.get('meta.profile')
     x[key] = kms_wrapped.encrypt(plain_text, kms_key, region, profile)
+    x.save(filename)
+
+
+@main.command(name='encrypt')
+@click.option('-f', '--filename', metavar='/path/to/config_file.yml',
+              type=click.Path(exists=True), required=True)
+def encrypt(filename):
+    """
+    Encrypts values for any key that that has the following keywords in it:
+      * key
+      * password
+      * token
+      * secret
+
+    Example:
+        waddle encrypt -f conf/dev.yml
+    """
+    x = ParamBunch()
+    x.load(filename=filename, decrypt=True)
+    kms_key = x.get('meta.kms_key')
+    if not kms_key:
+        print(f'{filename} does not have a kms key specified.')
+        return
+    region = x.get('meta.region')
+    profile = x.get('meta.profile')
+    values = []
+    for key, value in x.items():
+        values.append([key, value])
+    for key, value in values:
+        if is_secret(key):
+            value = kms_wrapped.encrypt(
+                value, kms_key, region=region, profile=profile)
+            x[key] = value
     x.save(filename)
 
 

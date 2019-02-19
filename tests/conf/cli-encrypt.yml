@@ -1,0 +1,8 @@
+---
+waddle.db.password: cody
+waddle.api.token: taylor
+waddle.public: jinx
+oauth.token: padme
+waddle.secret.favorite_dog: peanut
+meta:
+  kms_key: dev

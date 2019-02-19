@@ -60,3 +60,40 @@ class TestCli(TestCase):
                 'waddle.secret',
             ], input=f'whatwhat\n')
         self.assertIn('does not have a kms key specified', result.output)
+
+    def test_is_secret(self):
+        self.assertTrue(cli.is_secret('some.secret'))
+        self.assertTrue(cli.is_secret('some.password'))
+        self.assertFalse(cli.is_secret('some.username'))
+        self.assertTrue(cli.is_secret('some.api_key'))
+        self.assertTrue(cli.is_secret('some.oauth_token'))
+
+    def test_encrypt(self):
+        filename = 'tests/conf/test.yml'
+        copyfile('tests/conf/cli-encrypt.yml', filename)
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main, [
+                'encrypt',
+                '-f',
+                filename,
+            ])
+        x = ParamBunch()
+        x.load(filename=filename, decrypt=False)
+        self.assertNotEqual(x.waddle.db.password, 'cody')
+        self.assertNotEqual(x.waddle.api.token, 'taylor')
+        self.assertEqual(x.waddle.public, 'jinx')
+        self.assertNotEqual(x.oauth.token, 'padme')
+        self.assertNotEqual(x.waddle.secret.favorite_dog, 'peanut')
+        os.remove(filename)
+
+    def test_encyrpt_failure(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main, [
+                'encrypt',
+                '-f',
+                'tests/conf/encrypted.yml',
+            ], input=f'whatwhat\n')
+        self.assertIn('does not have a kms key specified', result.output)
+
