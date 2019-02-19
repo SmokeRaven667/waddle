@@ -72,7 +72,7 @@ class TestCli(TestCase):
         filename = 'tests/conf/test.yml'
         copyfile('tests/conf/cli-encrypt.yml', filename)
         runner = CliRunner()
-        result = runner.invoke(
+        runner.invoke(
             cli.main, [
                 'encrypt',
                 '-f',
@@ -96,4 +96,3 @@ class TestCli(TestCase):
                 'tests/conf/encrypted.yml',
             ], input=f'whatwhat\n')
         self.assertIn('does not have a kms key specified', result.output)
-
