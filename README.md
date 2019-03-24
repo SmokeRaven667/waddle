@@ -2,6 +2,56 @@
 the penguins api and tooling around aws's parameter store
 ![codebuild](https://codebuild.us-east-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiUU82MEFwb2JTUzJ2OFJSOUI4eURSc01BNnBNb04zVTRvaUZxTERxb3U3Ui9HdkVJRUllOHBUdlNXVGpGVXpUeXllVkVncVE4cDIxcFBIMzh6SFFMUWFzPSIsIml2UGFyYW1ldGVyU3BlYyI6IkJlcmc3clNIbVVBaFRCWFUiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
+## ParamBunch
+
+Lets you access secrets stored in a file or from parameter store!
+
+### From a file
+
+Create a file called test.yml that will hold your config.  
+It can include both secrets and non-secrets
+
+```yaml
+meta:
+  kms_key: dev
+  region: us-west-2
+  profile: mycompany
+aws.username: aws-user
+```
+
+Now add a secret to that file using the waddle cli
+
+```bash
+waddle -f /path/to/test.yml aws.password
+```
+
+waddle will prompt you to enter in the secret.  As long as you have a 
+kms key called dev, waddle will add a kms-data-key-encrypted secret into 
+`test.yml`.  
+
+Now you can access configuration values in the test.yml configuration file
+using the following syntax:
+
+```python
+from waddle import ParamBunch
+conf = ParamBunch(filename='/path/to/test.yml')
+AWS_USERNAME = conf.aws.username
+AWS_PASSWORD = conf.get('aws.password', 'some default value')
+```  
+
+### But I want to use parameter store </whine>
+
+You can also load configs straight from AWS parameter store by providing a 
+prefix.
+
+```python
+from waddle import ParamBunch
+conf = ParamBunch(prefix='/path/to/parameters')
+# Access /path/to/paramaters/aws/username
+AWS_USERNAME = conf.aws.username
+```  
+
+
 ## Bunch
 
 A class that offers pathy semantics 
