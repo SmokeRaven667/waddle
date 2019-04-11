@@ -13,12 +13,20 @@ test:
 		   --durations 10 \
 		   --cov waddle --cov-report term-missing tests/
 
-setup:
+setup: venv requirements
+
+venv:
 	if which python3.7 && [ ! -d bin ] ; then python3.7 -m venv . ; fi
 	if which python3.6 && [ ! -d bin ] ; then python3.6 -m venv . ; fi
+
+requirements:
 	source bin/activate \
 	  && python -m pip install -q -U pip \
 	  && pip install -q -r requirements.txt
+
+clean-venv:
+	if [ -d bin ] ; then rm -R bin ; fi
+	if [ -d lib ] ; then rm -R lib ; fi
 
 build:
 	source bin/activate \
