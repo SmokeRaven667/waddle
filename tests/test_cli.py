@@ -107,6 +107,7 @@ class TestCli(TestCase):
         conf = ParamBunch(prefix='/test')
         self.assertEqual(conf.waddle.cat, 'stella')
         self.assertEqual(conf.waddle.dog, 'olive')
+
         runner.invoke(
             cli.main,
             [ 'undeploy', '-f', filename, ])

@@ -1,4 +1,7 @@
+import sys
 from typing import Generator, Tuple
+from halo import Halo
+from halo.halo import colored_frame
 from murmuration.aws import cached_client
 from murmuration.helpers import prefix_alias
 from .session import ssm_client
@@ -28,7 +31,32 @@ def yield_parameters(prefix) -> Generator[Tuple[str, str, str], None, None]:
             yield key, value, x['Type']
 
 
-def put_parameter(key, value, kms_key, encrypted):
+def start_notification(action, key):
+    if sys.stdout.isatty():  # pragma: no cover
+        spinner = Halo(f'{action} {key}', spinner='dots')
+        spinner.start()
+        return spinner
+    message = f'{action} {key}....'
+    print(message, end='')
+    return None
+
+
+def end_notification(spinner: Halo, success=True):
+    mark = '✔' if success else '✘'
+    if sys.stdout.isatty():  # pragma: no-cover
+        if success:
+            spinner.succeed()
+        else:
+            mark = colored_frame(mark, 'red')
+            spinner.stop_and_persist(mark)
+    else:
+        print(mark, end='')
+
+
+def put_parameter(key, value, kms_key, encrypted, verbose=False):
+    spinner = None
+    if verbose:
+        spinner = start_notification('pushing', key)
     ssm = cached_client('ssm')
     params = {}
     if isinstance(value, list):
@@ -41,10 +69,20 @@ def put_parameter(key, value, kms_key, encrypted):
     else:
         params['Type'] = 'String'
     result = ssm.put_parameter(Name=key, Value=value, Overwrite=True, **params)
+    if verbose:
+        end_notification(spinner)
     return result
 
 
-def delete_parameters(*keys):
+def delete_parameters(*keys, verbose=False):
     ssm = cached_client('ssm')
-    result = ssm.delete_parameters(Names=keys)
-    return result
+    n_start, spinner = 0, None
+    while keys:
+        rg = keys[:10]
+        if verbose:
+            spinner = start_notification(
+                'deleting keys', f'{n_start}=>{n_start + len(rg) - 1}')
+        ssm.delete_parameters(Names=rg)
+        keys = keys[10:]
+        if verbose:
+            end_notification(spinner, False)

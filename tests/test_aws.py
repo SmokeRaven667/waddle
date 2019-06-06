@@ -18,6 +18,10 @@ class Aws(TestCase):
         'aws_secret_access_key',
     ]
 
+    def __init__(self, method_name):
+        super().__init__(method_name)
+        self.conf = None
+
     def save_settings(self):
         self.settings = {}
         for key in self.settings_keys:
@@ -47,6 +51,10 @@ class Aws(TestCase):
             Name='/test/waddle/dog', Value='olive', Type='SecureString',
             Overwrite=True)
 
+    def check_output(self, capsys):
+        self.conf.to_aws(verbose=False)
+        self.assertFalse(capsys.out)
+
     def test_yield_parameters(self):
         conf = ParamBunch()
         conf.load(prefix='/test')
@@ -68,7 +76,7 @@ class Aws(TestCase):
 
         conf.waddle.cat = [ 'cody', 'jinx' ]
         conf.meta.kms_key = 'dev'
-        conf.to_aws()
+        conf.to_aws(verbose=False)
         conf = ParamBunch(prefix='test')
         self.assertEqual(conf.waddle.dog, 'peanut')
         self.assertEqual(conf.waddle.secret, 'test of secrets')

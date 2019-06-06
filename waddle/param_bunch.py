@@ -30,8 +30,14 @@ class ParamBunch(Bunch):
         super(ParamBunch, self).__init__(values)
         super(ParamBunch, self)._set('original_values', values)
         super(ParamBunch, self)._set('encrypted', [])
+        super(ParamBunch, self)._set('spinner', None)
         if prefix or filename:
             self.load(prefix=prefix, filename=filename)
+
+    def _is_reserved(self, key):
+        if key in [ 'values', 'original_value', 'encrypted', 'spinner', ]:
+            return True
+        return key in self.__dict__ and not key.startswith('__')
 
     def aws_items(self, values=None, prefix=None):
         prefix = prefix or [ '', self.meta.namespace ]
@@ -78,7 +84,7 @@ class ParamBunch(Bunch):
         super(ParamBunch, self)._set('original_values', data)
         values = []
         for key, value in ParamBunch._traverse(data):
-            if key in ['values', 'original_values', 'encrypted', ]:
+            if self._is_reserved(key):
                 raise KeyError(f'`{key}` is not a valid key name')
             elif key.startswith('meta.'):
                 self[key] = value
@@ -122,16 +128,16 @@ class ParamBunch(Bunch):
             ms_encrypted.add(f'{prefix}/{x}')
         return ms_encrypted
 
-    def to_aws(self):
+    def to_aws(self, verbose=True):
         ms_encrypted = self._encrypted_keys()
         kms_key = self.get('meta.kms_key')
         for key, value in self.aws_items():
             encrypted = key in ms_encrypted
-            put_parameter(key, value, kms_key, encrypted)
+            put_parameter(key, value, kms_key, encrypted, verbose)
 
-    def delete_from_aws(self):
+    def delete_from_aws(self, verbose=True):
         keys = [ key for key, _ in self.aws_items() ]
-        delete_parameters(*keys)
+        delete_parameters(*keys, verbose=verbose)
 
     def original_value(self, key):
         data = self.original_values

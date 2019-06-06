@@ -46,6 +46,7 @@ setup(
         'click>=7.0',
         'murmuration>=0.5',
         'ruamel.yaml>=0.15.87',
+        'halo>=0.0.26',
     ],
     entry_points={
         'console_scripts': [
