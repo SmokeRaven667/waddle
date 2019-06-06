@@ -33,6 +33,10 @@ build:
 	  && python -B -O setup.py sdist \
 	  && python -B -O setup.py bdist_wheel
 
+bumpversion:
+	source bin/activate \
+	  && bumpversion minor
+
 clean:
 	source bin/activate \
 	  && python -B -O setup.py clean
@@ -42,4 +46,4 @@ upload:
 	source bin/activate \
 	  && twine upload dist/*
 
-deploy: clean build upload
+deploy: bumpversion clean build upload
