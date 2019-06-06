@@ -7,6 +7,7 @@ from .session import ssm_client
 __all__ = [
     'yield_parameters',
     'put_parameter',
+    'delete_parameters',
 ]
 
 
@@ -40,4 +41,10 @@ def put_parameter(key, value, kms_key, encrypted):
     else:
         params['Type'] = 'String'
     result = ssm.put_parameter(Name=key, Value=value, Overwrite=True, **params)
+    return result
+
+
+def delete_parameters(*keys):
+    ssm = cached_client('ssm')
+    result = ssm.delete_parameters(Names=keys)
     return result

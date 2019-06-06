@@ -43,7 +43,7 @@ def add_secret(filename, key):
         print(f'{filename} does not have a kms key specified.')
         return
     tty = sys.stdin.isatty()
-    if tty:
+    if tty:  # pragma: no-cover
         print(f'Enter value for [{key}]: ', end='', file=sys.stderr)
         sys.stderr.flush()
     # stdin = os.fdopen(sys.stdin.fileno(), 'rb', 0)
@@ -86,6 +86,34 @@ def encrypt(filename):
                 value, kms_key, region=region, profile=profile)
             x[key] = value
     x.save(filename)
+
+
+@main.command(name='deploy')
+@click.option('-f', '--filename', metavar='/path/to/config_file.yml',
+              type=click.Path(exists=True), required=True)
+def deploy(filename):
+    """
+    Deploys a locally stored config file to aws:
+
+    Example:
+        waddle deploy -f conf/dev.yml
+    """
+    x = ParamBunch(filename=filename)
+    x.to_aws()
+
+
+@main.command(name='undeploy')
+@click.option('-f', '--filename', metavar='/path/to/config_file.yml',
+              type=click.Path(exists=True), required=True)
+def undeploy(filename):
+    """
+    Deploys a locally stored config file to aws:
+
+    Example:
+        waddle deploy -f conf/dev.yml
+    """
+    x = ParamBunch(filename=filename)
+    x.delete_from_aws()
 
 
 if __name__ == "__main__":

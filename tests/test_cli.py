@@ -4,6 +4,7 @@ from unittest import TestCase
 from click.testing import CliRunner
 from waddle import cli
 from waddle.param_bunch import ParamBunch
+from waddle.aws import yield_parameters
 
 
 class TestCli(TestCase):
@@ -87,7 +88,7 @@ class TestCli(TestCase):
         self.assertNotEqual(x.waddle.secret.favorite_dog, 'peanut')
         os.remove(filename)
 
-    def test_encyrpt_failure(self):
+    def test_encrypt_failure(self):
         runner = CliRunner()
         result = runner.invoke(
             cli.main, [
@@ -96,3 +97,19 @@ class TestCli(TestCase):
                 'tests/conf/encrypted.yml',
             ], input=f'whatwhat\n')
         self.assertIn('does not have a kms key specified', result.output)
+
+    def test_deploy(self):
+        runner = CliRunner()
+        filename = 'tests/conf/deploy.yml'
+        runner.invoke(
+            cli.main,
+            [ 'deploy', '-f', filename, ])
+        conf = ParamBunch(prefix='/test')
+        self.assertEqual(conf.waddle.cat, 'stella')
+        self.assertEqual(conf.waddle.dog, 'olive')
+        runner.invoke(
+            cli.main,
+            [ 'undeploy', '-f', filename, ])
+        deleted_keys = [ '/test/waddle/cat', '/test/waddle/dog', ]
+        for key in yield_parameters('/test'):
+            self.assertNotIn(key, deleted_keys)

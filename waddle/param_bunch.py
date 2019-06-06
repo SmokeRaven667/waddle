@@ -6,6 +6,7 @@ from murmuration import kms_wrapped
 from .bunch import Bunch
 from .aws import yield_parameters
 from .aws import put_parameter
+from .aws import delete_parameters
 
 
 __all__ = [
@@ -127,6 +128,10 @@ class ParamBunch(Bunch):
         for key, value in self.aws_items():
             encrypted = key in ms_encrypted
             put_parameter(key, value, kms_key, encrypted)
+
+    def delete_from_aws(self):
+        keys = [ key for key, _ in self.aws_items() ]
+        delete_parameters(*keys)
 
     def original_value(self, key):
         data = self.original_values

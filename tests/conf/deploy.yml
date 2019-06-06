@@ -1,0 +1,6 @@
+---
+waddle.cat: stella
+waddle.dog: olive
+meta:
+  namespace: test
+  kms_key: dev
