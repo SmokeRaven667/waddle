@@ -90,7 +90,7 @@ def put_parameter(key, value, kms_key, encrypted, verbose=False):
 
 def delete_parameters(*keys, verbose=False):
     ssm = cached_client('ssm')
-    n_start, spinner = 0, None
+    n_start, spinner = 1, None
     while keys:
         rg = keys[:10]
         if verbose:

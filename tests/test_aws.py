@@ -76,7 +76,7 @@ class Aws(TestCase):
         self.assertEqual(conf.waddle.cat, 'cody')
 
         conf.waddle.cat = [ 'cody', 'jinx' ]
-        conf.meta.kms_key = 'dev'   
+        conf.meta.kms_key = 'dev'
         conf.to_aws(verbose=False)
         conf = ParamBunch(prefix='test')
         self.assertEqual(conf.waddle.dog, 'peanut')

@@ -127,11 +127,12 @@ class ParamBunch(Bunch):
             ms_encrypted.add(ssm_key(namespace, x))
         return ms_encrypted
 
-    def to_aws(self, verbose=True):
+    def to_aws(self, force_encryption=False, verbose=True):
         ms_encrypted = self._encrypted_keys()
         kms_key = self.get('meta.kms_key')
         for key, value in self.aws_items():
             encrypted = key in ms_encrypted
+            encrypted = encrypted or force_encryption
             put_parameter(key, value, kms_key, encrypted, verbose)
 
     def delete_from_aws(self, verbose=True):

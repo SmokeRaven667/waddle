@@ -91,15 +91,19 @@ def encrypt(filename):
 @main.command(name='deploy')
 @click.option('-f', '--filename', metavar='/path/to/config_file.yml',
               type=click.Path(exists=True), required=True)
-def deploy(filename):
+@click.option('-e', '--encrypted', is_flag=True)
+def deploy(filename, encrypted):
     """
     Deploys a locally stored config file to aws:
 
     Example:
         waddle deploy -f conf/dev.yml
+
+    Use the --encrypt flag to push all values as kms encrypted to
+    parameter store.
     """
     x = ParamBunch(filename=filename)
-    x.to_aws()
+    x.to_aws(force_encryption=encrypted)
 
 
 @main.command(name='undeploy')

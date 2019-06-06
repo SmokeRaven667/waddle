@@ -51,6 +51,24 @@ conf = ParamBunch(prefix='/path/to/parameters')
 AWS_USERNAME = conf.aws.username
 ```  
 
+## want to waddle your secrets up to SSM from a file?
+
+In certain cases, you may want to keep files locally, but then push them
+to aws as part of CI/CD.  For example, if you want to keep a centralized 
+repository of your secrets that is shared among developers, you can encrypt
+secrets in your config files using waddle.  For application deployment, you can
+push those files up to ssm using `waddle deploy` and/or delete them from ssm
+using `waddle undeploy`.
+
+```bash
+waddle deploy -f /path/to/params.yml
+```
+
+- or -
+
+```bash
+waddle undeploy -f /path/to/params.yml
+```
 
 ## Bunch
 
