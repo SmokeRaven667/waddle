@@ -11,23 +11,37 @@ __all__ = [
     'yield_parameters',
     'put_parameter',
     'delete_parameters',
+    'waddle_key',
+    'ssm_key',
 ]
 
+StrTuple = Tuple[str, str, str]
 
-def yield_parameters(prefix) -> Generator[Tuple[str, str, str], None, None]:
+
+def waddle_key(prefix, key):
+    return key.replace(prefix, '').replace('/', '.')[1:]
+
+
+def ssm_key(prefix, key):
+    prefix = f'/{prefix}' if prefix else ''
+    key = key.replace('.', '/')
+    return f'{prefix}/{key}'
+
+
+def yield_parameters(prefix, decrypt=True) -> Generator[StrTuple, None, None]:
     ssm = ssm_client()
     paginator = ssm.get_paginator('get_parameters_by_path')
     for page in paginator.paginate(
             Path=prefix,
             Recursive=True,
-            WithDecryption=True,
+            WithDecryption=decrypt,
             PaginationConfig={
                 'PageSize': 10,
             }):
         for x in page['Parameters']:
             key = x['Name']
             value = x['Value']
-            key = key.replace(prefix, '').replace('/', '.')[1:]
+            key = waddle_key(prefix, key)
             yield key, value, x['Type']
 
 

@@ -7,6 +7,7 @@ from .bunch import Bunch
 from .aws import yield_parameters
 from .aws import put_parameter
 from .aws import delete_parameters
+from .aws import ssm_key
 
 
 __all__ = [
@@ -121,11 +122,9 @@ class ParamBunch(Bunch):
 
     def _encrypted_keys(self):
         namespace = self.get('meta.namespace', '')
-        prefix = f'/{namespace}' if namespace else ''
         ms_encrypted = set()
         for x in self.encrypted:
-            x = x.replace('.', '/')
-            ms_encrypted.add(f'{prefix}/{x}')
+            ms_encrypted.add(ssm_key(namespace, x))
         return ms_encrypted
 
     def to_aws(self, verbose=True):

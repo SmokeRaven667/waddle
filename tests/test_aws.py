@@ -2,6 +2,7 @@ import os
 from unittest import TestCase
 from waddle import settings
 from waddle.aws import create_session
+from waddle.aws import delete_parameters
 from waddle import ParamBunch
 
 
@@ -75,7 +76,7 @@ class Aws(TestCase):
         self.assertEqual(conf.waddle.cat, 'cody')
 
         conf.waddle.cat = [ 'cody', 'jinx' ]
-        conf.meta.kms_key = 'dev'
+        conf.meta.kms_key = 'dev'   
         conf.to_aws(verbose=False)
         conf = ParamBunch(prefix='test')
         self.assertEqual(conf.waddle.dog, 'peanut')
@@ -84,13 +85,11 @@ class Aws(TestCase):
 
     @staticmethod
     def delete_parameters():
-        session = create_session()
-        ssm = session.client('ssm')
-        ssm.delete_parameters(Names=[
+        delete_parameters(
             '/test/waddle/cat',
             '/test/waddle/dog',
             '/test/waddle/secret',
-        ])
+            verbose=False)
 
     def tearDown(self):
         Aws.delete_parameters()
