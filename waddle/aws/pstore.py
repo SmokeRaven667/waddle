@@ -24,8 +24,7 @@ def waddle_key(prefix, key):
 
 def ssm_key(prefix, key):
     prefix = f'/{prefix}' if prefix else ''
-    key = key.replace('.', '/')
-    return f'{prefix}/{key}'
+    return f'{prefix}/{key}'.replace('.', '/')
 
 
 def yield_parameters(prefix, decrypt=True) -> Generator[StrTuple, None, None]:
@@ -45,12 +44,13 @@ def yield_parameters(prefix, decrypt=True) -> Generator[StrTuple, None, None]:
             yield key, value, x['Type']
 
 
-def start_notification(action, key):
+def start_notification(action, key, encrypted):
+    encrypted = ' (encrypted)' if encrypted else ''
     if sys.stdout.isatty():  # pragma: no cover
-        spinner = Halo(f'{action} {key}', spinner='dots')
+        spinner = Halo(f'{action} {key}{encrypted}', spinner='dots')
         spinner.start()
         return spinner
-    message = f'{action} {key}....'
+    message = f'{action} {key}{encrypted} ....'
     print(message, end='')
     return None
 
@@ -70,7 +70,7 @@ def end_notification(spinner: Halo, success=True):
 def put_parameter(key, value, kms_key, encrypted, verbose=False):
     spinner = None
     if verbose:
-        spinner = start_notification('pushing', key)
+        spinner = start_notification('pushing', key, encrypted)
     ssm = cached_client('ssm')
     params = {}
     if isinstance(value, list):
