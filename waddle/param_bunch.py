@@ -1,4 +1,6 @@
 from collections.abc import Mapping
+import logging
+import os
 import re
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
@@ -79,6 +81,13 @@ class ParamBunch(Bunch):
         return value
 
     def from_file(self, filename, decrypt=True):
+        # late load logger in case anyone sets up logging
+        # later
+        log = logging.getLogger(__name__)
+        if not os.path.exists(filename):
+            log.warning('waddle: could not find %s', filename)
+            return
+
         with open(filename, 'r', encoding='utf-8') as f:
             yaml = YAML()
             data = yaml.load(f)
@@ -115,9 +124,11 @@ class ParamBunch(Bunch):
             prefix = f'/{prefix}'
         prefix = prefix.replace('.', '/')
         for key, value, type_ in yield_parameters(prefix):
-            self[key] = value
             if type_ == 'SecureString':
                 self.encrypted.append(key)
+            elif type_ == 'StringList':
+                value = value.split(',')
+            self[key] = value
         self.meta.namespace = prefix[1:].replace('/', '.')
 
     def _encrypted_keys(self):

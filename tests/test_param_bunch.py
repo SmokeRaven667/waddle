@@ -148,3 +148,12 @@ class ParamBunchTest(TestCase):
         b.load(filename=filename)
         self.assertEqual('dogs', b.waddle.preferred)
         os.remove(filename)
+
+    def test_warning_logs(self):
+        filename = 'tests/conf/does_not_exist.yml'
+        with self.assertLogs(level='WARNING') as context:
+            b = ParamBunch()
+            b.load(filename=filename)
+            self.assertEqual(len(context.output), 1)
+            line = context.output[0]
+            self.assertIn('warning', line.lower())

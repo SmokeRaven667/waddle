@@ -3,7 +3,6 @@ from boto3.session import Session
 
 __all__ = [
     'create_session',
-    'ssm_client',
 ]
 
 
@@ -20,8 +19,3 @@ def create_session():
         profile_name=settings.aws_profile,
     )
     return session
-
-
-def ssm_client():
-    session = create_session()
-    return session.client('ssm')

@@ -1,5 +1,6 @@
 import os
 from shutil import copyfile
+import time
 from unittest import TestCase
 from click.testing import CliRunner
 from waddle import cli
@@ -104,6 +105,7 @@ class TestCli(TestCase):
         runner.invoke(
             cli.main,
             [ 'deploy', '-f', filename, ])
+        time.sleep(5)
         conf = ParamBunch(prefix='/test')
         self.assertEqual(conf.waddle.cat, 'stella')
         self.assertEqual(conf.waddle.dog, 'olive')
@@ -112,5 +114,6 @@ class TestCli(TestCase):
             cli.main,
             [ 'undeploy', '-f', filename, ])
         deleted_keys = [ '/test/waddle/cat', '/test/waddle/dog', ]
+        time.sleep(5)
         for key in yield_parameters('/test'):
             self.assertNotIn(key, deleted_keys)

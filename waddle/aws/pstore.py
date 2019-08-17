@@ -4,7 +4,6 @@ from halo import Halo
 from halo.halo import colored_frame
 from murmuration.aws import cached_client
 from murmuration.helpers import prefix_alias
-from .session import ssm_client
 
 
 __all__ = [
@@ -28,7 +27,7 @@ def ssm_key(prefix, key):
 
 
 def yield_parameters(prefix, decrypt=True) -> Generator[StrTuple, None, None]:
-    ssm = ssm_client()
+    ssm = cached_client('ssm')
     paginator = ssm.get_paginator('get_parameters_by_path')
     for page in paginator.paginate(
             Path=prefix,
@@ -44,7 +43,7 @@ def yield_parameters(prefix, decrypt=True) -> Generator[StrTuple, None, None]:
             yield key, value, x['Type']
 
 
-def start_notification(action, key, encrypted):
+def start_notification(action, key, encrypted=False):
     encrypted = ' (encrypted)' if encrypted else ''
     if sys.stdout.isatty():  # pragma: no cover
         spinner = Halo(f'{action} {key}{encrypted}', spinner='dots')

@@ -1,4 +1,5 @@
 import os
+import time
 from unittest import TestCase
 from waddle import settings
 from waddle.aws import create_session
@@ -67,6 +68,9 @@ class Aws(TestCase):
         conf.waddle.secret = 'test of secrets'
         conf.encrypted.append('waddle.secret')
         conf.to_aws()
+        # I hate this, but apparently
+        # aws needs time to catch up
+        time.sleep(5)
 
         conf.load(prefix='/test')
         self.assertIn('waddle.dog', conf.encrypted)
@@ -78,9 +82,14 @@ class Aws(TestCase):
         conf.waddle.cat = [ 'cody', 'jinx' ]
         conf.meta.kms_key = 'dev'
         conf.to_aws(verbose=False)
+        # I hate this, but apparently
+        # aws needs time to catch up
+        time.sleep(5)
+
         conf = ParamBunch(prefix='test')
         self.assertEqual(conf.waddle.dog, 'peanut')
         self.assertEqual(conf.waddle.secret, 'test of secrets')
+        print(f'cat: {conf.waddle.cat}')
         self.assertIn('jinx', conf.waddle.cat)
 
     @staticmethod
