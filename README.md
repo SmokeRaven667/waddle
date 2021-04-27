@@ -22,7 +22,7 @@ aws.username: aws-user
 Now add a secret to that file using the waddle cli
 
 ```bash
-waddle -f /path/to/test.yml aws.password
+waddle add-secret -f /path/to/test.yml aws.password
 ```
 
 waddle will prompt you to enter in the secret.  As long as you have a 
